@@ -1,0 +1,31 @@
+<div class="canvas-wrapper">
+  <div #container class="canvas-container"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)">
+  </div>
+
+  <!-- Floating Drawing Toolbar -->
+  <div class="floating-toolbar">
+    <button mat-mini-fab color="accent"
+            (click)="enableDrawingMode('polygon')"
+            [disabled]="drawingMode"
+            matTooltip="Draw Polygon">
+      <mat-icon>polyline</mat-icon>
+    </button>
+
+    <button mat-mini-fab color="accent"
+            (click)="enableDrawingMode('rectangle')"
+            [disabled]="drawingMode"
+            matTooltip="Draw Rectangle">
+      <mat-icon>crop_square</mat-icon>
+    </button>
+
+    <button mat-mini-fab color="warn"
+            *ngIf="drawingMode"
+            (click)="disableDrawingMode()"
+            matTooltip="Stop Drawing">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,405 @@
+/* Toolbar */
+.mapper-toolbar {
+  .toolbar-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+  }
+}
+
+/* Main layout */
+.mapper-container {
+  display: flex;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  gap: 1rem;
+  background: #fff;
+}
+
+/* Left column: palette + uploader + canvas */
+.canvas-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  min-width: 600px;
+  max-width: 70%;
+  gap: 1rem;
+
+  app-image-uploader {
+    display: block;
+  }
+
+  app-canvas-overlay {
+    display: block;
+    height: 100%;
+    min-height: 420px;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    background: #f7f7f7;
+    overflow: hidden;
+  }
+
+  /* Uploader row: keep uploader left and actions (Reset) on the right */
+  .uploader-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+
+    app-image-uploader {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .uploader-actions {
+      display: flex;
+      align-items: center;
+      margin-left: 0;
+    }
+  }
+}
+
+/* Device palette */
+.device-palette {
+  background: #fafafa;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+
+  h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .device-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    border: 1px solid #ddd;
+    padding: 0.4rem 0.6rem;
+    margin: 0 0.5rem 0.5rem 0;
+    border-radius: 6px;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      cursor: grabbing;
+      transform: scale(0.98);
+    }
+
+    .device-icon {
+      font-size: 20px;
+      color: #555;
+      line-height: 1;
+    }
+
+    .device-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #333;
+      white-space: nowrap;
+    }
+  }
+}
+
+/* Right column: room panel */
+.room-panel {
+  width: 340px;
+  background: #f9f9f9;
+  border-left: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem;
+    background: #eee;
+    font-weight: 500;
+    border-bottom: 1px solid #ccc;
+
+    mat-icon {
+      font-size: 20px;
+    }
+
+    span {
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+  }
+
+  .room-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px - 48px); // toolbar + header
+  }
+
+  /* Sleek smaller search bar */
+  .room-search {
+    /* create breathing room between the panel header and the search input */
+    margin-top: 0.6rem;
+    padding: 0.25rem 0.6rem 0 0.6rem; /* less vertical space */
+    .mat-form-field {
+      height: 32px;
+      font-size: 0.84rem;
+      margin: 0;
+    }
+
+    input[matInput] {
+      padding: 4px 6px;
+      height: 22px;
+      font-size: 0.88rem;
+    }
+    button[matSuffix] {
+      width: 26px;
+      height: 26px;
+      mat-icon { font-size: 14px; }
+    }
+  }
+
+  .room-list {
+    flex: 1;
+    padding: 0.8rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #c9c9c9 transparent;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #c9c9c9;
+      border-radius: 8px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+  margin-top: 6px; /* reduce gap between search bar and list */
+
+  .room-box {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 0.7rem;
+      margin-bottom: 0.7rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+      &:hover {
+        border-color: #cfcfcf;
+      }
+
+      &.expanded {
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+      }
+
+      .room-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+
+        .room-title {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .room-title-text {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            h4 {
+              margin: 0;
+              font-size: 1.05rem;
+              font-weight: 700;
+              color: #222;
+            }
+
+            mat-chip {
+              font-size: 0.75rem;
+              height: 20px;
+              line-height: 20px;
+              padding: 0 6px;
+              border-radius: 12px;
+              font-weight: 500;
+            }
+          }
+
+          .room-actions {
+            display: flex;
+            gap: 0.25rem;
+
+            button {
+              padding: 0;
+              width: 28px;
+              height: 28px;
+
+              mat-icon {
+                font-size: 18px;
+              }
+            }
+          }
+        }
+
+        .room-meta {
+          display: flex;
+          gap: 1rem;
+
+          p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #555;
+          }
+        }
+      }
+
+      .room-details {
+        margin-top: 0.6rem;
+        border-top: 1px dashed #e4e4e4;
+        padding-top: 0.6rem;
+
+        h5 {
+          margin: 0 0 0.4rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .muted {
+          color: #777;
+          font-size: 0.85rem;
+          margin: 0;
+        }
+
+        ul {
+          padding-left: 1rem;
+          margin: 0;
+
+          li {
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 0.25rem;
+            list-style: disc;
+          }
+        }
+
+        /* Device list inside room details */
+        .device-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+        }
+
+        .device-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .device-actions {
+          display: flex;
+          gap: 0.25rem;
+          align-items: center;
+        }
+
+        .coords {
+          font-size: 0.75rem;
+          color: #666;
+        }
+      }
+    }
+  }
+
+  .export-footer {
+    padding: 0.8rem;
+    border-top: 1px solid #ddd;
+    background: #f0f0f0;
+    text-align: center;
+
+    button {
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    mat-icon {
+      font-size: 18px;
+    }
+  }
+}
+
+/* Responsive tweaks */
+@media (max-width: 1200px) {
+  .canvas-column {
+    min-width: 520px;
+    max-width: 65%;
+  }
+
+  .uploader-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    .uploader-actions {
+      display: flex;
+      align-items: center;
+      margin-left: 0;
+      button {
+        height: 34px;
+        font-size: 0.85rem;
+      }
+    }
+    /* make uploader itself take available space but not push the button down */
+    app-image-uploader {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  .room-panel {
+    width: 320px;
+  }
+}
+
+@media (max-width: 992px) {
+  .mapper-container {
+    flex-direction: column;
+  }
+
+  .canvas-column {
+    min-width: unset;
+    max-width: 100%;
+  }
+
+  .room-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #ddd;
+    max-height: 40vh;
+
+    .room-content {
+      height: calc(40vh - 48px); // subtract header
+    }
+  }
+}

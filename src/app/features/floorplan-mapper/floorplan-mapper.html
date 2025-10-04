@@ -1,0 +1,155 @@
+<mat-toolbar color="primary" class="mapper-toolbar">
+  <span class="toolbar-title">Floor Plan Mapper</span>
+</mat-toolbar>
+
+<div class="mapper-container">
+  <!-- Left: Palette + Image + Canvas -->
+  <div class="canvas-column">
+    <!-- Device Palette -->
+    <div class="device-palette">
+      <h3>Devices</h3>
+      <div
+        class="device-item"
+        *ngFor="let device of availableDevices"
+        draggable="true"
+        (dragstart)="onDragStart($event, device)"
+      >
+        <mat-icon class="device-icon">
+          {{ device.type === 'Light' ? 'lightbulb' :
+             device.type === 'Sensor' ? 'sensors' :
+             device.type === 'Camera' ? 'videocam' :
+             'thermostat' }}
+        </mat-icon>
+        <span class="device-name">{{ device.name }}</span>
+      </div>
+    </div>
+
+    <!-- Image Uploader + Reset -->
+    <div class="uploader-row">
+      <app-image-uploader (imageLoaded)="onImageLoaded($event)"></app-image-uploader>
+      <div class="uploader-actions">
+        <button mat-stroked-button color="warn" (click)="resetAll()" aria-label="Reset layout">
+          <mat-icon>refresh</mat-icon>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Canvas Overlay -->
+    <app-canvas-overlay
+      [backgroundImage]="uploadedImage"
+      (deviceDropped)="onDeviceDropped($event)"
+      (roomCreated)="onRoomCreated($event)"
+      (roomClicked)="toggleRoom($event)"
+    ></app-canvas-overlay>
+  </div>
+
+  <!-- Right: Room Info Panel -->
+  <div class="room-panel">
+    <div class="panel-header">
+      <mat-icon>meeting_room</mat-icon>
+      <span>Rooms</span>
+
+      <!-- Spacer pushes the import button to the far right -->
+      <span class="spacer"></span>
+
+      <!-- Import icon button -->
+      <button mat-icon-button (click)="fileInput.click()" aria-label="Import layout">
+        <mat-icon>upload</mat-icon>
+      </button>
+      <input
+        #fileInput
+        type="file"
+        accept="application/json"
+        style="display: none"
+        (change)="onImportFileSelected($event)"
+      />
+    </div>
+
+
+    <div class="room-content">
+        <div class="room-search">
+          <mat-form-field appearance="outline" style="width:100%">
+            <mat-label>Search rooms or types</mat-label>
+            <input matInput placeholder="Search by name or type" [(ngModel)]="searchQuery" />
+            <button mat-icon-button matSuffix *ngIf="searchQuery" (click)="searchQuery=''" aria-label="Clear search">
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-form-field>
+        </div>
+      <div class="room-list">
+        <div
+          class="room-box"
+          *ngFor="let room of filteredRooms; trackBy: trackByRoomId"
+          (click)="toggleRoom(room.id)"
+          [class.expanded]="expandedRoomId === room.id"
+        >
+          <div class="room-summary">
+            <div class="room-title">
+              <div class="room-title-text">
+                <h4>{{ room.name || ('Room ' + room.id.slice(0, 6)) }}</h4>
+                <mat-chip
+                  *ngIf="room.type"
+                  [ngStyle]="{'background-color': getRoomColor(room.type), 'color': '#fff'}"
+                  selected
+                >
+                  {{ room.type }}
+                </mat-chip>
+              </div>
+
+              <div class="room-actions">
+                <button mat-icon-button (click)="editRoom(room)" aria-label="Edit room">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteRoom(room)" aria-label="Delete room">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="room-meta">
+              <p>{{ (room.points.length) / 2 }} points</p>
+              <p>{{ room.devices.length }} devices</p>
+            </div>
+          </div>
+
+          <div class="room-details" *ngIf="expandedRoomId === room.id">
+            <h5>Devices</h5>
+            <ng-container *ngIf="room.devices.length > 0; else noDevices">
+              <mat-list dense>
+                <mat-list-item *ngFor="let device of room.devices">
+                      <div class="device-row">
+                        <div class="device-info">
+                          <span>{{ device.name }}</span>
+                          <small *ngIf="device.x !== undefined && device.y !== undefined" class="coords">x: {{ device.x | number:'1.0-0' }}, y: {{ device.y | number:'1.0-0' }}</small>
+                        </div>
+                        <div class="device-actions">
+                          <button
+                            mat-icon-button
+                            color="warn"
+                            aria-label="Delete device"
+                            (click)="removeDevice(room.id, device.id)"
+                          >
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    </mat-list-item>
+              </mat-list>
+            </ng-container>
+            <ng-template #noDevices>
+              <p class="muted">No devices yet.</p>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <div class="export-footer">
+        <button mat-raised-button color="accent" (click)="exportRooms()">
+          <mat-icon>download</mat-icon>
+          Export Rooms
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
