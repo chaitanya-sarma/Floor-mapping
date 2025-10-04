@@ -50,20 +50,8 @@
       <mat-icon>meeting_room</mat-icon>
       <span>Rooms</span>
 
-      <!-- Spacer pushes the import button to the far right -->
+      <!-- Spacer pushes buttons to the far right -->
       <span class="spacer"></span>
-
-      <!-- Import icon button -->
-      <button mat-icon-button (click)="fileInput.click()" aria-label="Import layout">
-        <mat-icon>upload</mat-icon>
-      </button>
-      <input
-        #fileInput
-        type="file"
-        accept="application/json"
-        style="display: none"
-        (change)="onImportFileSelected($event)"
-      />
     </div>
 
 
@@ -144,10 +132,19 @@
       </div>
 
       <div class="export-footer">
-        <button mat-raised-button color="accent" (click)="exportRooms()">
+        <button mat-raised-button color="accent" (click)="exportRooms()" aria-label="Export layout">
           <mat-icon>download</mat-icon>
-          Export Rooms
         </button>
+        <button mat-raised-button color="accent" (click)="fileInput.click()" aria-label="Import layout">
+          <mat-icon>upload</mat-icon>
+        </button>
+        <input
+          #fileInput
+          type="file"
+          accept="application/json"
+          style="display: none"
+          (change)="onImportFileSelected($event)"
+        />
       </div>
     </div>
   </div>

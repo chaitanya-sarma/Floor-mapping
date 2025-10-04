@@ -333,18 +333,18 @@
     padding: 0.8rem;
     border-top: 1px solid #ddd;
     background: #f0f0f0;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
 
     button {
-      font-size: 0.85rem;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    mat-icon {
-      font-size: 18px;
+      min-width: 48px;
+      padding: 0 8px;
+      
+      mat-icon {
+        margin: 0;
+        font-size: 18px;
+      }
     }
   }
 }
