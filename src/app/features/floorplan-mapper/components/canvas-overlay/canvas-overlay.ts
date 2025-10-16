@@ -170,6 +170,80 @@ export class CanvasOverlay implements AfterViewInit, OnChanges {
     this.drawLayer.batchDraw();
   }
 
+  // Zoom control methods
+  zoomIn(): void {
+    if (!this.stage) return;
+    
+    const oldScale = this.stage.scaleX();
+    const newScale = Math.min(this.maxScale, oldScale * this.scaleBy);
+    
+    // Zoom towards the center of the stage
+    const center = {
+      x: this.stage.width() / 2,
+      y: this.stage.height() / 2
+    };
+    
+    const mousePointTo = {
+      x: (center.x - this.stage.x()) / oldScale,
+      y: (center.y - this.stage.y()) / oldScale,
+    };
+
+    this.stage.scale({ x: newScale, y: newScale });
+
+    const newPos = {
+      x: center.x - mousePointTo.x * newScale,
+      y: center.y - mousePointTo.y * newScale,
+    };
+    this.stage.position(newPos);
+    this.stage.batchDraw();
+  }
+
+  zoomOut(): void {
+    if (!this.stage) return;
+    
+    const oldScale = this.stage.scaleX();
+    const newScale = Math.max(this.minScale, oldScale / this.scaleBy);
+    
+    // Zoom towards the center of the stage
+    const center = {
+      x: this.stage.width() / 2,
+      y: this.stage.height() / 2
+    };
+    
+    const mousePointTo = {
+      x: (center.x - this.stage.x()) / oldScale,
+      y: (center.y - this.stage.y()) / oldScale,
+    };
+
+    this.stage.scale({ x: newScale, y: newScale });
+
+    const newPos = {
+      x: center.x - mousePointTo.x * newScale,
+      y: center.y - mousePointTo.y * newScale,
+    };
+    this.stage.position(newPos);
+    this.stage.batchDraw();
+  }
+
+  resetView(): void {
+    if (!this.stage) return;
+    
+    // Reset scale to 1 and center the view
+    this.stage.scale({ x: 1, y: 1 });
+    
+    // Center the stage based on background image if available
+    if (this.backgroundImage) {
+      const centerX = (this.stage.width() - this.backgroundImage.width) / 2;
+      const centerY = (this.stage.height() - this.backgroundImage.height) / 2;
+      this.stage.position({ x: centerX, y: centerY });
+    } else {
+      // If no background image, just center at origin
+      this.stage.position({ x: this.stage.width() / 2, y: this.stage.height() / 2 });
+    }
+    
+    this.stage.batchDraw();
+  }
+
   // Drag/Drop from palette handlers (bound in template on container div)
   onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -383,6 +457,7 @@ export class CanvasOverlay implements AfterViewInit, OnChanges {
     const shape = this.roomShapes.get(roomId);
     if (shape) {
       shape.fill(this.hexToRgba(color, 0.3));
+      shape.stroke(color);
       this.drawLayer.batchDraw();
     }
   }
@@ -592,6 +667,19 @@ export class CanvasOverlay implements AfterViewInit, OnChanges {
       this.stage.batchDraw();
     } catch (e) {
       console.error('clearAll error', e);
+    }
+  }
+
+  // Public: clear only rooms and devices, keep background image
+  public clearRoomsAndDevices(): void {
+    try {
+      this.drawLayer.destroyChildren();
+      this.deviceLayer.destroyChildren();
+      this.roomShapes.clear();
+      this.hoveredRoomId = undefined;
+      this.stage.batchDraw();
+    } catch (e) {
+      console.error('clearRoomsAndDevices error', e);
     }
   }
 

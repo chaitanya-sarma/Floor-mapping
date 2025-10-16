@@ -13,13 +13,13 @@ import { MatListModule } from '@angular/material/list';
 
 import { ImageUploader } from '../../shared/image-uploader/image-uploader';
 import { CanvasOverlay } from './components/canvas-overlay/canvas-overlay';
-import { ConfirmResetDialog } from './components/confirm-reset-dialog/confirm-reset-dialog';
 import { Layout } from '../../core/services/layout';
 import { Device } from '../../core/models/device';
 import { Room } from '../../core/models/room';
 import { RoomDetailsDialog } from './components/room-details-dialog/room-details-dialog';
 import { AssignDeviceDialog } from './components/assign-device-dialog/assign-device-dialog';
 import { AssignChoiceDialog } from './components/assign-device-dialog/assign-choice-dialog';
+import { ConfirmationDialog } from './components/confirmation-dialog/confirmation-dialog';
 import { ROOM_TYPE_COLORS } from '../../core/utils/room-colors';
 import { getRoomColor, hexToRgba } from '../../core/utils/color-utils';
 
@@ -111,28 +111,32 @@ export class FloorplanMapper {
     }
   }
 
-  // Reset entire app state: clear background, rooms, devices, and canvas
-  resetAll(): void {
-    const ref = this.dialog.open(ConfirmResetDialog, { width: '320px' });
-    ref.afterClosed().subscribe(confirmed => {
-      if (!confirmed) return;
-
-      // Clear Layout state
-      this.layout.setRooms([]);
-      this.layout.setDevices([]);
-      this.layout.setBackgroundImage(null as any);
-
-      // Clear local uploaded image
-      this.uploadedImage = undefined;
-
-      // Reset the image uploader's internal file input so the same file can be selected again
-      if (this.uploader && typeof this.uploader.reset === 'function') {
-        this.uploader.reset();
+  // Clear rooms and devices, keeping the background image
+  clearRooms(): void {
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      width: '400px',
+      data: {
+        title: 'Clear All Rooms',
+        message: 'Are you sure you want to clear all rooms and devices? The background image will be kept.',
+        confirmText: 'Clear',
+        cancelText: 'Cancel',
+        icon: 'clear_all',
+        iconColor: '#ff9800'
       }
+    });
 
-      // Clear overlay visuals
-      if (this.overlay && typeof this.overlay.clearAll === 'function') {
-        this.overlay.clearAll();
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        // Clear only rooms and devices, keep background image
+        this.layout.setRooms([]);
+        this.layout.setDevices([]);
+
+        // Clear overlay rooms and devices but keep background
+        if (this.overlay && typeof this.overlay.clearRoomsAndDevices === 'function') {
+          this.overlay.clearRoomsAndDevices();
+        }
+
+        this.snackBar.open('All rooms and devices cleared', 'Close', { duration: 3000 });
       }
     });
   }
@@ -222,7 +226,12 @@ export class FloorplanMapper {
   onRoomCreated(room: Room) {
     const dialogRef = this.dialog.open(RoomDetailsDialog, {
       width: '300px',
-      data: { name: '', type: '' }
+      data: { 
+        name: '', 
+        type: '', 
+        existingRooms: this.layout.rooms(),
+        currentRoomId: undefined 
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -335,7 +344,12 @@ export class FloorplanMapper {
   editRoom(room: Room) {
     const dialogRef = this.dialog.open(RoomDetailsDialog, {
       width: '300px',
-      data: { name: room.name || '', type: room.type || '' }
+      data: { 
+        name: room.name || '', 
+        type: room.type || '',
+        existingRooms: this.layout.rooms(),
+        currentRoomId: room.id
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -356,30 +370,68 @@ export class FloorplanMapper {
   }
 
   deleteRoom(room: Room) {
-    const confirmed = confirm(`Delete room "${room.name || room.id}"?`);
-    if (!confirmed) return;
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      width: '400px',
+      data: {
+        title: 'Delete Room',
+        message: `Are you sure you want to delete room "${room.name || 'Unnamed Room'}"? This will also remove all devices in this room.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        icon: 'delete',
+        iconColor: '#f44336'
+      }
+    });
 
-    this.layout.setRooms(this.layout.rooms().filter(r => r.id !== room.id));
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.layout.setRooms(this.layout.rooms().filter(r => r.id !== room.id));
 
-    const remainingDevices = this.layout.devices().filter(d => d.roomId !== room.id);
-    this.layout.setDevices(remainingDevices);
-    
-    this.overlay.removeDeviceMarkersForRoom(room.id);
-    this.overlay.removeRoomShape(room.id);
+        const remainingDevices = this.layout.devices().filter(d => d.roomId !== room.id);
+        this.layout.setDevices(remainingDevices);
+        
+        this.overlay.removeDeviceMarkersForRoom(room.id);
+        this.overlay.removeRoomShape(room.id);
+
+        this.snackBar.open(`Room "${room.name || 'Unnamed Room'}" deleted`, 'Close', { duration: 3000 });
+      }
+    });
   }
 
   removeDevice(roomId: string, deviceId: string) {
-    const remainingDevices = this.layout.devices().filter(d => d.id !== deviceId);
-    console.log(remainingDevices);
-    this.layout.setDevices(remainingDevices);
-    // Remove from room devices list
-    const updatedRooms = this.layout.rooms().map(r => r.id === roomId ? { ...r, devices: r.devices.filter(d => d.id !== deviceId) } : r);
-    this.layout.setRooms(updatedRooms);
+    // Find the device to get its name for the confirmation dialog
+    const device = this.layout.devices().find(d => d.id === deviceId);
+    const deviceName = device?.name || 'Unknown Device';
+    const room = this.layout.rooms().find(r => r.id === roomId);
+    const roomName = room?.name || 'Unnamed Room';
 
-    // Remove marker from canvas if present
-    if (this.overlay && typeof this.overlay.removeDeviceMarker === 'function') {
-      this.overlay.removeDeviceMarker(deviceId);
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      width: '400px',
+      data: {
+        title: 'Remove Device',
+        message: `Are you sure you want to remove "${deviceName}" from "${roomName}"?`,
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        icon: 'remove_circle',
+        iconColor: '#f44336'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        const remainingDevices = this.layout.devices().filter(d => d.id !== deviceId);
+        this.layout.setDevices(remainingDevices);
+        // Remove from room devices list
+        const updatedRooms = this.layout.rooms().map(r => r.id === roomId ? { ...r, devices: r.devices.filter(d => d.id !== deviceId) } : r);
+        this.layout.setRooms(updatedRooms);
+
+        // Remove marker from canvas if present
+        if (this.overlay && typeof this.overlay.removeDeviceMarker === 'function') {
+          this.overlay.removeDeviceMarker(deviceId);
+        }
+
+        this.snackBar.open(`"${deviceName}" removed from "${roomName}"`, 'Close', { duration: 3000 });
+      }
+    });
   }
 
   exportRooms() {
@@ -468,6 +520,5 @@ export class FloorplanMapper {
 
     reader.readAsText(file);
   }
-
 
 }

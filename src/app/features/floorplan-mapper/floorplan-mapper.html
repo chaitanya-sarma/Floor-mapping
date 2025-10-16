@@ -28,8 +28,8 @@
     <div class="uploader-row">
       <app-image-uploader (imageLoaded)="onImageLoaded($event)"></app-image-uploader>
       <div class="uploader-actions">
-        <button mat-stroked-button color="warn" (click)="resetAll()" aria-label="Reset layout">
-          <mat-icon>refresh</mat-icon>
+        <button mat-stroked-button color="warn" (click)="clearRooms()" aria-label="Clear all rooms">
+          <mat-icon>clear_all</mat-icon>
           Reset
         </button>
       </div>
